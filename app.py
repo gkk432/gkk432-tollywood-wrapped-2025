@@ -145,10 +145,31 @@ st.markdown("""
         line-height: 1.7;
         position: relative;
         z-index: 2;
-        text-align: center;
+        text-align: left;
+        padding: 0 2rem;
     }
     
-    /* Enhanced Metric Cards - Better Visibility */
+    .roast-text ul {
+        list-style-type: none; 
+        padding: 0;
+        margin: 0;
+    }
+    
+    .roast-text li {
+        position: relative;
+        padding-left: 30px;
+        margin-bottom: 15px;
+    }
+    
+    .roast-text li::before {
+        content: '🔥'; 
+        position: absolute;
+        left: 0;
+        top: 2px;
+        font-size: 1.2rem;
+    }
+            
+    /* Enhanced Metric Cards */
     .metric-card {
         background: linear-gradient(145deg, #2A2A2A 0%, #1F1F1F 100%);
         padding: 2rem;
@@ -307,22 +328,6 @@ st.markdown("""
         height: 3px;
         background: var(--gradient-primary);
         border-radius: 2px;
-    }
-    
-    /* Platform Alert - Toned Down */
-    .platform-alert {
-        background: linear-gradient(135deg, #1F4E79, #2563EB);
-        border: 2px solid #3B82F6;
-        padding: 1.5rem;
-        border-radius: 15px;
-        margin: 1rem 0;
-        box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
-        animation: gentlePulse 4s infinite;
-    }
-    
-    @keyframes gentlePulse {
-        0%, 100% { box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3); }
-        50% { box-shadow: 0 5px 30px rgba(59, 130, 246, 0.5); }
     }
     
     /* Premium Tables */
@@ -529,7 +534,12 @@ def get_personalized_roast(total_movies, avg_rating, total_spent, theater_visits
     elif len(bad_choices) >= 1:
         roasts.append("At least one catastrophic choice. We all make mistakes, but yours have IMDb evidence.")
     
-    return " ".join(roasts) if roasts else "You're surprisingly balanced. That's... actually impressive and slightly suspicious!"
+    if not roasts:
+        return "You're surprisingly balanced. That's... actually impressive and slightly suspicious!"
+    
+    # Format as HTML list (UPDATED)
+    formatted_roasts = "".join([f"<li>{r}</li>" for r in roasts])
+    return f"<ul>{formatted_roasts}</ul>"
 
 # --- PLATFORM DETECTION ---
 def detect_platform_behavior(full_stats):
@@ -668,10 +678,6 @@ def main():
                             })
         
         st.markdown("---")
-        
-        # # Premium selection summary
-        # if user_selections:
-        #     st.success(f"🎬 **{len(user_selections)} MOVIES SELECTED** • Ready for brutal analysis", icon="✅")
         
         # Premium generate button
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -818,20 +824,6 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         
-        # Platform Alert (Toned Down)
-        if multiple_platforms:
-            st.markdown(f"""
-            <div class="platform-alert">
-                <h3 style="color: white; margin: 0; font-family: 'Cinzel', serif; font-size: 1.5rem; text-align: center;">
-                    📺 PLATFORM INVESTIGATION ALERT
-                </h3>
-                <p style="color: white; margin: 15px 0; font-size: 1.2rem; text-align: center; font-family: 'Rajdhani', sans-serif;">
-                    <strong>{platform_count} platforms detected!</strong><br>
-                    🏴‍☠️ <em>Impressive subscription collection... or creative sourcing!</em>
-                </p>
-            </div>
-            """, unsafe_allow_html=True)
-        
         # ACHIEVEMENTS SECTION - Enhanced Display
         if badges:
             st.markdown("""
@@ -848,7 +840,7 @@ def main():
             
             st.markdown("</div>", unsafe_allow_html=True)
         
-        # THE BRUTAL ROAST
+        # THE BRUTAL ROAST (NOW BULLETED)
         roast_msg = get_personalized_roast(total_movies, avg_rating, total_spent, theater_visits, ott_watches, bad_choices, platform_count)
         
         st.markdown(f"""
@@ -904,59 +896,40 @@ def main():
         
         st.divider()
         
-        # Platform Investigation Bureau (Toned Down)
+        # Platform Investigation Bureau (MODIFIED: Just List, No Efficiency)
         if ott_watches > 0:
             st.markdown('<div class="section-header">📺 Platform Investigation Bureau</div>', unsafe_allow_html=True)
             
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.subheader("Platform Usage Analysis")
-                
-                if multiple_platforms:
-                    st.info(f"📺 **{platform_count} platforms detected** • Diverse entertainment taste!")
-                    st.markdown("**Platform Distribution:**")
-                    for platform, count in platform_breakdown.items():
-                        if platform not in ['unknown', 'nan', '']:
-                            st.write(f"📺 {platform}: {count} movies")
-                else:
-                    st.success(f"✅ **{platform_count} platforms** • Reasonable subscription count")
-                    for platform, count in platform_breakdown.items():
-                        if platform not in ['unknown', 'nan', '']:
-                            st.metric(platform, count)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-                st.subheader("Subscription Efficiency")
-                
-                efficiency_score = 100 - (platform_count * 20) if platform_count > 2 else 100
-                if theater_visits == 0 and ott_watches > 10: efficiency_score -= 15
-                efficiency_score = max(efficiency_score, 0)
-                
-                st.progress(efficiency_score / 100)
-                
-                if efficiency_score >= 80:
-                    st.success(f"✅ **{efficiency_score}% Efficient**")
-                    st.caption("*Smart subscription management!*")
-                elif efficiency_score >= 50:
-                    st.warning(f"⚠️ **{efficiency_score}% Efficiency**")
-                    st.caption("*Room for optimization...*")
-                else:
-                    st.error(f"📺 **{efficiency_score}% Efficiency**")
-                    st.caption("*Subscription strategy needs work!*")
-                
-                st.markdown('</div>', unsafe_allow_html=True)
+            # Logic to build the HTML list first
+            platform_html = ""
+            if multiple_platforms:
+                status_msg = f"<div style='color: #60A5FA; margin-bottom: 10px;'>📺 <strong>{platform_count} platforms detected</strong> • Diverse taste!</div>"
+                for platform, count in platform_breakdown.items():
+                    if platform not in ['unknown', 'nan', '']:
+                        platform_html += f"<div style='display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 5px 0;'><span>{platform.title()}</span><span style='color: #D4AF37;'>{count}</span></div>"
+            else:
+                status_msg = f"<div style='color: #10B981; margin-bottom: 10px;'>✅ <strong>{platform_count} platforms</strong> • Focused viewer</div>"
+                for platform, count in platform_breakdown.items():
+                    if platform not in ['unknown', 'nan', '']:
+                        platform_html += f"<div style='text-align: center; font-size: 2rem; color: #D4AF37; margin: 10px 0;'>{count}</div><div style='text-align: center;'>{platform.title()}</div>"
+
+            # Render ONLY the List box (Subscription Efficiency removed)
+            st.markdown(f"""
+            <div class="chart-container">
+                <h3 style="color: #D4AF37; font-family: 'Cinzel', serif; margin-top: 0; text-align: center;">Platform Usage Analysis</h3>
+                {status_msg}
+                <div style="margin-top: 15px; font-family: 'Rajdhani', sans-serif; font-size: 1.1rem;">
+                    {platform_html}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
         
         st.divider()
         
-        # The Hall of Shame vs Hall of Fame
+        # The Hall of Shame vs Hall of Fame (FIXED: REMOVED OUTER CHART-CONTAINER)
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             st.subheader("🍅 Hall of Shame")
             if bad_choices:
                 st.markdown(f"""
@@ -974,10 +947,8 @@ def main():
                     <p>Impressive taste detected!</p>
                 </div>
                 """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
-            st.markdown('<div class="chart-container">', unsafe_allow_html=True)
             st.subheader("💎 Hall of Fame")
             if great_choices:
                 st.markdown(f"""
@@ -995,11 +966,10 @@ def main():
                     <p>You missed all the good stuff!</p>
                 </div>
                 """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
         
         st.divider()
         
-        # Financial Damage Assessment (Improved)
+        # Financial Damage Assessment (RESTORED)
         st.markdown('<div class="section-header">💸 Financial Damage Assessment</div>', unsafe_allow_html=True)
         
         theater_disasters = full_stats[(full_stats['Theater 🎟️']==True) & (full_stats['IMDB Ratings']<6)]
